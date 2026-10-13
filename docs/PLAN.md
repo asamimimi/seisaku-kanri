@@ -40,7 +40,7 @@
 | ルーティング | react-router-dom | 7 | 画面遷移（`/login`、`/`、`/projects/:projectId`） |
 | DB・認証 | Supabase（`@supabase/supabase-js` 2） | — | PostgreSQL、Googleログイン、行レベルセキュリティ(RLS) |
 | 並び替え | dnd-kit | 未導入（v0.1のサイトマップで入れる） | ページのドラッグ並び替え・階層変更 |
-| 公開 | Firebase Hosting | 未設定 | 本番公開 |
+| 公開 | Firebase Hosting | — | 本番公開。`main` にpushすると GitHub Actions で自動デプロイ |
 | デザイン | Figma | — | WF: https://www.figma.com/design/4qd8sfPtTNy2ajRKLagRNd/ |
 
 **Figma WFの画面**
@@ -85,11 +85,13 @@
 | ✅ | テーブル設計（`20261013000000_v01_core.sql`） |
 | ✅ | React の初期セットアップ（Googleログイン、案件一覧、案件の作成） |
 | ✅ | 依存パッケージの追加、`.env.example`、`.gitignore` に `.env` を追加 |
-| ⬜ | `.gitignore` の中の `.gitignore` という行を消し、`.gitignore` をコミットする |
-| ⬜ | Supabase プロジェクトを作り、SQLを実行する（README 手順1〜2） |
-| ⬜ | Google のOAuthクライアントを作り、Supabaseに設定する（README 手順3） |
-| ⬜ | `.env` を作り、ログイン → 案件の作成まで動くことを確認する |
-| ⬜ | ここまでをコミットする |
+| ✅ | `.gitignore` の中の `.gitignore` という行を消し、`.gitignore` をコミットする |
+| ✅ | Supabase プロジェクトを作り、SQLを実行する（README 手順1〜2） |
+| ✅ | Google のOAuthクライアントを作り、Supabaseに設定する（README 手順3） |
+| ✅ | `.env` を作り、Supabaseに接続する |
+| ✅ | Firebase Hosting へ手動デプロイ（プロジェクト: `seisaku-kanri-5f0dd`） |
+| 🔶 | GitHub Actions の自動デプロイ（ビルド手順を修正済み。GitHubにSupabaseの値を登録する） |
+| ⬜ | 本番URLを Google の「承認済みのJavaScript生成元」と Supabase の Redirect URLs に追加し、本番でログインできるか確認する |
 
 ### v0.1　案件とサイトマップ（目安: 10/20〜11/9）
 
@@ -106,7 +108,7 @@
 | ⬜ | ページ詳細画面: ①制作フェーズのステップ表示、「次へ」ボタン、▲先行着手の説明 |
 | ⬜ | ページ詳細画面: ②確認状況カード3枚（依頼日・OK日・経過日数・テスト環境URL） |
 | ⬜ | 案件一覧: 並び替えのプルダウン、「＋ 新しい案件を作成」の枠 |
-| ⬜ | Firebase Hosting で公開し、本番URLを Google と Supabase の設定に追加する |
+| ⬜ | 公開版で一通り動作確認する |
 
 ### v0.2　仕様メモと素材（目安: 11/10〜11/30）
 

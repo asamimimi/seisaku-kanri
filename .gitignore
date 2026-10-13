@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 # Supabase の接続情報（本物の値は .env に書く）
 .env
+
+# Firebase CLI のキャッシュ
+.firebase/
