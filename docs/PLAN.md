@@ -90,7 +90,7 @@
 | ✅ | Google のOAuthクライアントを作り、Supabaseに設定する（README 手順3） |
 | ✅ | `.env` を作り、Supabaseに接続する |
 | ✅ | Firebase Hosting へ手動デプロイ（プロジェクト: `seisaku-kanri-5f0dd`） |
-| 🔶 | GitHub Actions の自動デプロイ（ビルド手順を修正済み。GitHubにSupabaseの値を登録する） |
+| ✅ | GitHub Actions の自動デプロイ（`main` へのpushで本番に反映） |
 | ⬜ | 本番URLを Google の「承認済みのJavaScript生成元」と Supabase の Redirect URLs に追加し、本番でログインできるか確認する |
 
 ### v0.1　案件とサイトマップ（目安: 10/20〜11/9）
