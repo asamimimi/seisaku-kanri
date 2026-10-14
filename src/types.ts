@@ -47,6 +47,8 @@ export type PageOverview = {
   waiting_count: number
   revising_count: number
   ahead_count: number
+  materials_count: number
+  materials_temporary_count: number
 }
 
 export type ConfirmationStatus = 'not_requested' | 'waiting' | 'revising' | 'ok' | 'not_required'
@@ -61,4 +63,16 @@ export type PageConfirmationStatus = {
   requested_at: string | null
   resolved_at: string | null
   is_ahead: boolean
+}
+
+export type MaterialStatus = 'temporary' | 'purchased' | 'replaced'
+
+/** materials テーブルの1行（ページの素材） */
+export type Material = {
+  id: string
+  page_id: string
+  name: string
+  source_url: string | null
+  status: MaterialStatus
+  position: number
 }

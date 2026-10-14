@@ -325,6 +325,7 @@ export default function ProjectPage() {
                 <th scope="col">URL</th>
                 <th scope="col">① 制作フェーズ</th>
                 <th scope="col">② 確認状況</th>
+                <th scope="col">素材</th>
                 <th scope="col">
                   <span className="visually-hidden">操作</span>
                 </th>
