@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useDraggable, useDroppable } from '@dnd-kit/react'
 import { ConfirmationMenu } from './ConfirmationMenu'
 import type { DropZone, TreeRow } from '../lib/sitemap'
@@ -61,7 +62,12 @@ export function SitemapRow({
       </td>
       <th scope="row" className="sitemap-name" style={{ paddingLeft: 16 + row.depth * 24 }}>
         {row.depth > 0 && <span className="tree-mark" aria-hidden="true">└</span>}
-        <span className={row.depth === 0 ? 'strong' : undefined}>{row.name}</span>
+        <Link
+          to={`/projects/${row.project_id}/pages/${row.id}`}
+          className={row.depth === 0 ? 'strong' : undefined}
+        >
+          {row.name}
+        </Link>
       </th>
       <td className="sitemap-url">
         {href ? (
