@@ -101,6 +101,18 @@ export function SitemapRow({
           onChange={onChangeStatus}
         />
       </td>
+      <td className="sitemap-materials">
+        {row.materials_count > 0 ? (
+          <>
+            {row.materials_count}
+            {row.materials_temporary_count > 0 && (
+              <span className="muted small">（仮 {row.materials_temporary_count}）</span>
+            )}
+          </>
+        ) : (
+          <span className="muted">—</span>
+        )}
+      </td>
       <td>
         <button className="btn btn-outline" onClick={onEdit} aria-label={`${row.name}を編集`}>
           編集

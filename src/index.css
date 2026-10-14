@@ -124,7 +124,7 @@ a { color: var(--blue); }
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 16px; }
 .filter-select { min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--panel); font: inherit; color: inherit; }
 .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); }
-.sitemap { width: 100%; min-width: 920px; border-collapse: collapse; }
+.sitemap { width: 100%; min-width: 1000px; border-collapse: collapse; }
 .sitemap th, .sitemap td { padding: 8px 16px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: middle; }
 .sitemap thead th { background: var(--head); border-bottom-color: var(--line); font-size: 13px; white-space: nowrap; }
 .sitemap tbody th { font-weight: 400; }
@@ -200,3 +200,44 @@ a { color: var(--blue); }
 .status-select.status-revising { border-style: dashed; }
 .status-select.status-not_requested,
 .status-select.status-not_required { border: 1px dashed var(--line); color: var(--muted); }
+
+/* サイトマップの素材列 */
+.sitemap-materials { white-space: nowrap; }
+
+/* ページ詳細の下段（仕様メモ / 素材リスト）。狭い画面では右の列が下に回り込む */
+.detail-columns { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px; }
+.detail-columns > .panel { flex: 1 1 480px; min-width: 0; }
+.detail-side { flex: 0 1 400px; min-width: 0; display: grid; gap: 24px; }
+@media (max-width: 960px) { .detail-side { flex-basis: 100%; } }
+.panel { background: var(--panel); border: 1px solid var(--line); }
+.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 6px 20px; background: var(--head); border-bottom: 1px solid var(--line); }
+.panel-title { margin: 0; font-size: 16px; }
+.panel-body { display: grid; gap: 16px; padding: 16px 20px 20px; }
+.panel-body > p { margin: 0; }
+
+/* 仕様メモ */
+.memo { overflow-wrap: anywhere; }
+.memo h3 { margin: 16px 0 8px; font-size: 16px; }
+.memo h3:first-child { margin-top: 0; }
+.memo p, .memo ul { margin: 0 0 8px; }
+.memo ul { padding-left: 1.4em; }
+.memo-editor { display: grid; gap: 8px; }
+.memo-toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+.memo-textarea { width: 100%; min-height: 240px; padding: 12px; border: 1px solid var(--line); font: inherit; line-height: 1.7; resize: vertical; }
+.figma-link { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding-top: 16px; border-top: 1px solid var(--line-soft); }
+.figma-link input { flex: 1 1 240px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); font: inherit; }
+.figma-open { display: inline-flex; align-items: center; text-decoration: none; }
+
+/* 素材リスト */
+.materials { margin: 0; padding: 0; list-style: none; }
+.material { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.material[aria-busy='true'] { opacity: 0.6; }
+.material-info { flex: 1; min-width: 0; display: grid; }
+.material-name { justify-self: start; padding: 0; color: var(--ink); font-weight: 700; text-align: left; text-decoration: none; }
+.material-name:hover { text-decoration: underline; }
+.material-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.material-status { min-height: 44px; padding: 0 8px; border: 1px solid var(--ink); background: var(--panel); color: var(--ink); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+.material-status.material-purchased { background: var(--blue-bg); border-color: var(--blue); color: var(--blue-ink); }
+.material-status.material-replaced { background: var(--ink); color: #fff; }
+.btn-add { width: 100%; border: 1px dashed var(--muted); background: none; }
+.btn-small { padding: 0 12px; font-size: 13px; }

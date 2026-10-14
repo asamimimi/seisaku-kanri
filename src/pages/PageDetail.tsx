@@ -3,8 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { daysSince, formatMonthDay } from '../lib/date'
 import { STATUS_LABELS, joinUrl } from '../lib/sitemap'
+import { MaterialList } from '../components/MaterialList'
+import { SpecMemo } from '../components/SpecMemo'
 import type {
   ConfirmationStatus,
+  Material,
   PageConfirmationStatus,
   PageOverview,
   Phase,
@@ -17,6 +20,8 @@ type Data = {
   phases: Phase[]
   points: PageConfirmationStatus[]
   gates: Map<string, string> // 確認ポイントID → ゲートのフェーズID
+  spec: { spec_memo: string; figma_url: string | null } | null // ビューに無い列（仕様メモ・Figmaリンク）
+  materials: Material[]
 }
 
 const STATUSES = Object.keys(STATUS_LABELS) as ConfirmationStatus[]
@@ -46,9 +51,22 @@ export default function PageDetail() {
         .order('position'),
       supabase.from('page_confirmation_status').select('*').eq('page_id', pageId),
       supabase.from('confirmation_points').select('id, gate_phase_id').eq('project_id', projectId),
-    ]).then(([project, pages, phases, points, gates]) => {
+      supabase.from('pages').select('spec_memo, figma_url').eq('id', pageId).maybeSingle(),
+      supabase
+        .from('materials')
+        .select('id, page_id, name, source_url, status, position')
+        .eq('page_id', pageId)
+        .order('position'),
+    ]).then(([project, pages, phases, points, gates, spec, materials]) => {
       if (cancelled) return
-      const failed = project.error ?? pages.error ?? phases.error ?? points.error ?? gates.error
+      const failed =
+        project.error ??
+        pages.error ??
+        phases.error ??
+        points.error ??
+        gates.error ??
+        spec.error ??
+        materials.error
       if (failed) {
         setError(failed.message)
         return
@@ -68,6 +86,8 @@ export default function PageDetail() {
         gates: new Map(
           (gates.data as { id: string; gate_phase_id: string }[]).map((g) => [g.id, g.gate_phase_id]),
         ),
+        spec: spec.data,
+        materials: materials.data as Material[],
       })
     })
     return () => {
@@ -124,7 +144,8 @@ export default function PageDetail() {
   }
   if (!data || !page) return <p className="status">読み込み中…</p>
 
-  const { project, pages, phases, points, gates } = data
+  const { project, pages, phases, points, gates, spec, materials } = data
+  const reload = () => setReloadKey((k) => k + 1)
   const phaseIndex = phases.findIndex((p) => p.id === page.phase_id)
   const nextPhase = phases[phaseIndex + 1]
   const phaseName = (id: string | undefined) => phases.find((p) => p.id === id)?.name ?? ''
@@ -275,6 +296,24 @@ export default function PageDetail() {
           ))}
         </div>
       </section>
+
+      <div className="detail-columns">
+        <SpecMemo
+          key={page.id}
+          pageId={page.id}
+          memo={spec?.spec_memo ?? ''}
+          figmaUrl={spec?.figma_url ?? null}
+          onSaved={reload}
+        />
+        <div className="detail-side">
+          <MaterialList
+            projectId={projectId}
+            pageId={page.id}
+            materials={materials}
+            onSaved={reload}
+          />
+        </div>
+      </div>
     </main>
   )
 }
