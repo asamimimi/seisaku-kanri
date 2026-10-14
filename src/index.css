@@ -152,7 +152,8 @@ a { color: var(--blue); }
 .confirm-summary.tone-waiting { background: var(--blue-bg); border-color: var(--blue); color: var(--blue-ink); }
 .confirm-summary.tone-revising { border-style: dashed; }
 .confirm-summary.tone-none { border: 1px dashed var(--line); color: var(--muted); }
-.confirm-panel { position: absolute; z-index: 10; top: calc(100% + 4px); left: 0; right: 0; min-width: 280px; display: grid; gap: 8px; padding: 12px; background: var(--panel); border: 1px solid var(--ink); box-shadow: 0 4px 12px rgb(0 0 0 / 0.12); }
+/* 位置は ConfirmationMenu が画面に対して決める（表の枠で切れないように fixed） */
+.confirm-panel { position: fixed; z-index: 20; min-width: 280px; display: grid; gap: 8px; padding: 12px; background: var(--panel); border: 1px solid var(--ink); box-shadow: 0 4px 12px rgb(0 0 0 / 0.12); }
 .confirm-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .confirm-row .badge { margin-left: 6px; }
 .confirm-row select { min-height: 44px; padding: 0 8px; border: 1px solid var(--line); background: var(--panel); font: inherit; color: inherit; }
@@ -367,3 +368,12 @@ a { color: var(--blue); }
 .share-item > fieldset { display: grid; gap: 12px; margin: 0; padding: 12px 16px 16px; border: 1px solid var(--line); }
 .share-item-title { display: flex; align-items: center; gap: 12px; padding: 0 4px; font-weight: 700; }
 .share-item-remove { min-height: 44px; font-weight: 400; font-size: 13px; color: var(--danger); }
+
+/* アーカイブ */
+.section-switch { display: flex; flex-wrap: wrap; gap: 8px; }
+.archived-list { margin: 0; padding: 0; list-style: none; background: var(--panel); border: 1px solid var(--line); }
+.archived-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 12px 20px; border-bottom: 1px solid var(--line-soft); }
+.archived-item:last-child { border-bottom: 0; }
+.archived-info { display: grid; min-width: 0; }
+.archived-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.archived-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 16px; padding: 12px 16px; background: var(--head); border: 1px dashed var(--muted); }

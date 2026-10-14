@@ -20,6 +20,7 @@ export type Project = {
   client_name: string | null
   due_date: string | null
   staging_url: string | null
+  archived_at: string | null
 }
 
 export type PhaseStage = 'design' | 'build' | 'done'

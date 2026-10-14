@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react'
 import { supabase } from '../lib/supabase'
 import { formatDue } from '../lib/date'
@@ -64,6 +64,7 @@ export default function ProjectPage() {
   })
   const [stagingOpen, setStagingOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const navigate = useNavigate()
 
   // ドラッグ中のページと、いま落とすとどうなるか
   const [dragId, setDragId] = useState<string | null>(null)
@@ -80,7 +81,7 @@ export default function ProjectPage() {
     void Promise.all([
       supabase
         .from('projects')
-        .select('id, name, client_name, due_date, staging_url')
+        .select('id, name, client_name, due_date, staging_url, archived_at')
         .eq('id', projectId)
         .maybeSingle(),
       supabase.from('page_overview').select('*').eq('project_id', projectId),
@@ -196,6 +197,25 @@ export default function ProjectPage() {
     setReloadKey((k) => k + 1)
   }
 
+  /**
+   * アーカイブする（終わった案件を一覧から外す）・元に戻す。データはすべて残る。
+   * 権限が無いとき RLS はエラーにせず0件にするので、更新できた行を受け取って確かめる
+   */
+  const setArchived = async (archive: boolean) => {
+    setActionError(null)
+    const { data: updated, error } = await supabase
+      .from('projects')
+      .update({ archived_at: archive ? new Date().toISOString() : null })
+      .eq('id', projectId)
+      .select('id')
+    if (error || !updated?.length) {
+      setActionError(`保存できませんでした${error ? `: ${error.message}` : '（編集する権限がありません）'}`)
+      return
+    }
+    if (archive) navigate('/')
+    else setReloadKey((k) => k + 1)
+  }
+
   /** 書き込み → 失敗したら表示、成功したら読み直す（先行着手などはビューで再計算されるため） */
   const save = async (pageId: string, write: () => PromiseLike<{ error: { message: string } | null }>) => {
     setSavingId(pageId)
@@ -270,6 +290,11 @@ export default function ProjectPage() {
           </p>
         </div>
         <div className="title-actions">
+          {!project.archived_at && (
+            <button className="btn btn-outline" onClick={() => void setArchived(true)}>
+              アーカイブ
+            </button>
+          )}
           <button className="btn btn-outline" onClick={() => setShareOpen(true)}>
             共有リンク
           </button>
@@ -278,6 +303,17 @@ export default function ProjectPage() {
           </button>
         </div>
       </div>
+
+      {project.archived_at && (
+        <div className="archived-banner" role="status">
+          <span>
+            この案件はアーカイブ済みです（案件一覧の「進行中」には出ません）。削除は、案件一覧の「アーカイブ済み」からできます。
+          </span>
+          <button className="btn btn-outline" onClick={() => void setArchived(false)}>
+            進行中に戻す
+          </button>
+        </div>
+      )}
 
       <nav className="tabs" aria-label="案件の表示">
         <Link
