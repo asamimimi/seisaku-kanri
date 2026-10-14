@@ -6,6 +6,7 @@
   --subtle: #44443f;
   --line: #c9c9c4;
   --line-soft: #e2e2dd;
+  --gray: #b9b9b3;
   --head: #ecece8;
   --blue: #2f5bd3;
   --blue-bg: #dfe6fb;
@@ -63,6 +64,11 @@ a { color: var(--blue); }
 .breadcrumb { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
 .title-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
 
+/* 見出しと並び替え */
+.section-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; margin-bottom: 16px; }
+.section-header h2 { margin: 0; }
+.sort-control { display: flex; align-items: center; gap: 12px; }
+
 /* まとめ */
 .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
 .summary-card { background: var(--panel); border: 1px solid var(--line); padding: 16px 20px; }
@@ -72,6 +78,8 @@ a { color: var(--blue); }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
 .card { display: block; background: var(--panel); border: 1px solid var(--line); padding: 20px; color: inherit; text-decoration: none; }
 .card:hover { border-color: var(--ink); }
+.card-new { display: grid; place-items: center; min-height: 160px; padding: 20px; border: 2px dashed var(--gray); background: none; color: var(--muted); font: inherit; cursor: pointer; }
+.card-new:hover { border-color: var(--ink); color: var(--ink); }
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
 .card-name { font-weight: 700; font-size: 16px; }
 .bar { display: flex; height: 12px; margin: 16px 0 8px; border: 1px solid var(--line); background: var(--line-soft); }
