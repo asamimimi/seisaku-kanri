@@ -43,7 +43,7 @@ export default function PageDetail() {
     void Promise.all([
       supabase
         .from('projects')
-        .select('id, name, client_name, due_date, staging_url')
+        .select('id, name, client_name, due_date, staging_url, archived_at')
         .eq('id', projectId)
         .maybeSingle(),
       supabase.from('page_overview').select('*').eq('project_id', projectId),
