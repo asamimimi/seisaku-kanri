@@ -5,10 +5,37 @@ import { ProjectCard } from '../components/ProjectCard'
 import { NewProjectDialog } from '../components/NewProjectDialog'
 import type { ProjectOverview } from '../types'
 
+type SortKey = 'due' | 'waiting' | 'ahead' | 'name'
+
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'due', label: '納期が近い順' },
+  { key: 'waiting', label: '確認待ちが多い順' },
+  { key: 'ahead', label: '▲先行着手が多い順' },
+  { key: 'name', label: '案件名順' },
+]
+
+/** 納期が近い順（納期なしは最後）。同じなら案件名順 */
+const byDue = (a: ProjectOverview, b: ProjectOverview) => {
+  if (a.due_date !== b.due_date) {
+    if (!a.due_date) return 1
+    if (!b.due_date) return -1
+    return a.due_date < b.due_date ? -1 : 1
+  }
+  return a.name.localeCompare(b.name, 'ja')
+}
+
+const COMPARE: Record<SortKey, (a: ProjectOverview, b: ProjectOverview) => number> = {
+  due: byDue,
+  waiting: (a, b) => b.waiting_pages - a.waiting_pages || byDue(a, b),
+  ahead: (a, b) => b.ahead_pages - a.ahead_pages || byDue(a, b),
+  name: (a, b) => a.name.localeCompare(b.name, 'ja'),
+}
+
 export default function Projects() {
   const [projects, setProjects] = useState<ProjectOverview[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [sort, setSort] = useState<SortKey>('due')
 
   const [reloadKey, setReloadKey] = useState(0) // 増やすと一覧を読み直す
 
@@ -19,7 +46,6 @@ export default function Projects() {
       .from('project_overview')
       .select('*')
       .is('archived_at', null)
-      .order('due_date', { ascending: true, nullsFirst: false })
       .then(({ data, error }) => {
         if (cancelled) return
         if (error) {
@@ -35,6 +61,7 @@ export default function Projects() {
   }, [reloadKey])
 
   const list = projects ?? []
+  const sorted = [...list].sort(COMPARE[sort])
   const waiting = list.reduce((n, p) => n + p.waiting_pages, 0)
   const ahead = list.reduce((n, p) => n + p.ahead_pages, 0)
   const soon = list.filter((p) => {
@@ -66,7 +93,23 @@ export default function Projects() {
         </div>
       </section>
 
-      <h2>進行中の案件</h2>
+      <div className="section-header">
+        <h2>進行中の案件</h2>
+        <label className="sort-control">
+          <span className="muted">並び替え</span>
+          <select
+            className="filter-select"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+          >
+            {SORTS.map((s) => (
+              <option key={s.key} value={s.key}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       {error && (
         <p role="alert" className="error">
@@ -74,15 +117,17 @@ export default function Projects() {
         </p>
       )}
       {projects === null && !error && <p className="status">読み込み中…</p>}
-      {projects !== null && list.length === 0 && (
-        <p className="muted">まだ案件がありません。「＋ 案件を作成」から始めましょう。</p>
-      )}
 
-      <section className="cards" aria-label="案件一覧">
-        {list.map((p) => (
-          <ProjectCard key={p.project_id} p={p} />
-        ))}
-      </section>
+      {projects !== null && (
+        <section className="cards" aria-label="案件一覧">
+          {sorted.map((p) => (
+            <ProjectCard key={p.project_id} p={p} />
+          ))}
+          <button type="button" className="card-new" onClick={() => setDialogOpen(true)}>
+            ＋ 新しい案件を作成
+          </button>
+        </section>
+      )}
 
       <p className="legend" aria-label="進捗バーの色">
         <span>進捗バーの色:</span>

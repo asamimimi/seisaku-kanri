@@ -4,6 +4,7 @@ import { Header } from './components/Header'
 import Login from './pages/Login'
 import Projects from './pages/Projects'
 import ProjectPage from './pages/ProjectPage'
+import PageDetail from './pages/PageDetail'
 
 /** ログインしていない人を /login へ送る。ログイン済みなら共通ヘッダー付きで中身を出す。 */
 function RequireAuth() {
@@ -27,6 +28,7 @@ export default function App() {
           <Route element={<RequireAuth />}>
             <Route path="/" element={<Projects />} />
             <Route path="/projects/:projectId" element={<ProjectPage />} />
+            <Route path="/projects/:projectId/pages/:pageId" element={<PageDetail />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
