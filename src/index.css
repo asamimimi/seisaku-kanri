@@ -124,7 +124,7 @@ a { color: var(--blue); }
 .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 16px; }
 .filter-select { min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--panel); font: inherit; color: inherit; }
 .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); }
-.sitemap { width: 100%; min-width: 1000px; border-collapse: collapse; }
+.sitemap { width: 100%; min-width: 1060px; border-collapse: collapse; }
 .sitemap th, .sitemap td { padding: 8px 16px; border-bottom: 1px solid var(--line-soft); text-align: left; vertical-align: middle; }
 .sitemap thead th { background: var(--head); border-bottom-color: var(--line); font-size: 13px; white-space: nowrap; }
 .sitemap tbody th { font-weight: 400; }
@@ -241,3 +241,30 @@ a { color: var(--blue); }
 .material-status.material-replaced { background: var(--ink); color: #fff; }
 .btn-add { width: 100%; border: 1px dashed var(--muted); background: none; }
 .btn-small { padding: 0 12px; font-size: 13px; }
+
+/* 案件のタブ（サイトマップ / 指摘・質問） */
+.tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+.tab { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; margin-bottom: -1px; padding: 0 20px; border: 1px solid transparent; color: var(--muted); text-decoration: none; }
+.tab:hover { color: var(--ink); }
+.tab[aria-current='page'] { background: var(--panel); border-color: var(--line); border-bottom-color: var(--panel); color: var(--ink); font-weight: 700; }
+.tab-count { padding: 0 8px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; }
+.sitemap-issues { white-space: nowrap; }
+
+/* 指摘・質問 */
+.issue-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.issues { margin: 0; padding: 0; list-style: none; }
+.issue { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line-soft); }
+.issue[aria-busy='true'] { opacity: 0.6; }
+.issue-check { display: grid; place-items: center; flex: none; width: 44px; height: 44px; cursor: pointer; }
+.issue-check input { width: 22px; height: 22px; margin: 0; accent-color: var(--ink); cursor: pointer; }
+.issue-text { flex: 1; min-width: 0; padding-top: 10px; }
+.issue-line { display: flex; align-items: baseline; gap: 6px; }
+.issue-body { white-space: pre-wrap; overflow-wrap: anywhere; }
+.issue-meta { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+.issue.is-resolved .issue-body { color: var(--muted); text-decoration: line-through; }
+.badge-fix { flex: none; border-color: var(--line); color: var(--ink); }
+.badge-question { flex: none; background: var(--blue-bg); border-color: var(--blue); color: var(--blue-ink); }
+.kind-field { border: 0; padding: 0; margin: 0 0 16px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.kind-field legend { padding: 0; margin-bottom: 4px; }
+.kind-option { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; }
+.field textarea { padding: 8px 12px; border: 1px solid var(--line); font: inherit; resize: vertical; }

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { DragDropProvider, DragOverlay } from '@dnd-kit/react'
 import { supabase } from '../lib/supabase'
 import { formatDue } from '../lib/date'
 import { buildTree, collectDescendantIds, joinUrl, planMove } from '../lib/sitemap'
 import type { DropZone, MovePlan, TreeRow } from '../lib/sitemap'
+import { IssueList } from '../components/IssueList'
 import { PageDialog } from '../components/PageDialog'
 import { SitemapRow } from '../components/SitemapRow'
 import { StagingUrlDialog } from '../components/StagingUrlDialog'
 import type {
+  Issue,
   ConfirmationStatus,
   PageConfirmationStatus,
   PageOverview,
@@ -21,6 +23,7 @@ type Data = {
   pages: PageOverview[]
   phases: Phase[]
   statuses: PageConfirmationStatus[]
+  issues: Issue[]
 }
 
 type DropState = { targetId: string; zone: DropZone; plan: MovePlan | null }
@@ -37,6 +40,9 @@ const FILTERS: { key: Filter; label: string }[] = [
 /** 案件のサイトマップ画面 */
 export default function ProjectPage() {
   const { projectId = '' } = useParams()
+  // タブ（サイトマップ / 指摘・質問）は URL の ?tab= で持つ（再読み込みやリンクでも同じタブが開く）
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view = searchParams.get('tab') === 'issues' ? 'issues' : 'sitemap'
   const [data, setData] = useState<Data | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -77,9 +83,13 @@ export default function ProjectPage() {
         .eq('project_id', projectId)
         .order('position'),
       supabase.from('page_confirmation_status').select('*').eq('project_id', projectId),
-    ]).then(([project, pages, phases, statuses]) => {
+      supabase
+        .from('issues')
+        .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at')
+        .eq('project_id', projectId),
+    ]).then(([project, pages, phases, statuses, issues]) => {
       if (cancelled) return
-      const failed = project.error ?? pages.error ?? phases.error ?? statuses.error
+      const failed = project.error ?? pages.error ?? phases.error ?? statuses.error ?? issues.error
       if (failed) {
         setError(failed.message)
         return
@@ -94,6 +104,7 @@ export default function ProjectPage() {
         pages: pages.data as PageOverview[],
         phases: phases.data as Phase[],
         statuses: statuses.data as PageConfirmationStatus[],
+        issues: issues.data as Issue[],
       })
     })
     return () => {
@@ -213,6 +224,7 @@ export default function ProjectPage() {
   if (!data) return <p className="status">読み込み中…</p>
 
   const { project, phases } = data
+  const openIssues = data.issues.filter((i) => !i.resolved_at).length
   const phaseTone = (phaseId: string) =>
     Math.min(Math.max(phases.findIndex((p) => p.id === phaseId), 0), 4)
 
@@ -249,130 +261,168 @@ export default function ProjectPage() {
         </button>
       </div>
 
-      <div className="filters" role="group" aria-label="絞り込み">
-        <span className="muted">絞り込み:</span>
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            className={`btn ${filter === f.key ? 'btn-primary' : ''}`}
-            aria-pressed={filter === f.key}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
-        <select
-          className="filter-select"
-          value={phaseFilter}
-          onChange={(e) => setPhaseFilter(e.target.value)}
-          aria-label="制作フェーズで絞り込む"
+      <nav className="tabs" aria-label="案件の表示">
+        <Link
+          to={`/projects/${projectId}`}
+          className="tab"
+          aria-current={view === 'sitemap' ? 'page' : undefined}
+          onClick={(e) => {
+            e.preventDefault()
+            setSearchParams({})
+          }}
         >
-          <option value="">制作フェーズ: すべて</option>
-          {phases.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
+          サイトマップ
+        </Link>
+        <Link
+          to={`/projects/${projectId}?tab=issues`}
+          className="tab"
+          aria-current={view === 'issues' ? 'page' : undefined}
+          onClick={(e) => {
+            e.preventDefault()
+            setSearchParams({ tab: 'issues' })
+          }}
+        >
+          指摘・質問
+          {openIssues > 0 && <span className="tab-count">{openIssues}</span>}
+        </Link>
+      </nav>
+
+      {view === 'issues' ? (
+        <IssueList
+          projectId={projectId}
+          issues={data.issues}
+          pages={rows}
+          onSaved={() => setReloadKey((k) => k + 1)}
+        />
+      ) : (
+        <>
+        <div className="filters" role="group" aria-label="絞り込み">
+          <span className="muted">絞り込み:</span>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              className={`btn ${filter === f.key ? 'btn-primary' : ''}`}
+              aria-pressed={filter === f.key}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </button>
           ))}
-        </select>
-      </div>
-
-      {actionError && (
-        <p role="alert" className="error">
-          {actionError}
-        </p>
-      )}
-
-      <p className="visually-hidden" aria-live="polite">
-        {dragId ? (drop?.plan?.label ?? 'ここには置けません') : ''}
-      </p>
-      {(filter !== 'all' || phaseFilter) && (
-        <p className="muted small">
-          絞り込み中は並び替えできません。「すべて」に戻すと、左端のつまみでドラッグできます。
-        </p>
-      )}
-
-      <DragDropProvider
-        onDragStart={(event) => {
-          setDragId(String(event.operation.source?.id))
-          setDrop(null)
-        }}
-        onDragOver={(event) => {
-          updateDrop(event.operation.target, event.operation.position.current.y)
-        }}
-        onDragMove={(event) => {
-          // move イベントの時点では position はまだ前の値なので、これから動く先で計算する
-          const { position, target } = event.operation
-          const y = event.to?.y ?? position.current.y + (event.by?.y ?? 0)
-          updateDrop(target, y)
-        }}
-        onDragEnd={(event) => {
-          const dragged = event.operation.source?.id
-          const plan = dropRef.current?.plan
-          setDragId(null)
-          setDrop(null)
-          if (event.canceled || !dragged || !plan) return
-          void move(String(dragged), plan)
-        }}
-      >
-        <div className="table-wrap">
-          <table className="sitemap">
-            <thead>
-              <tr>
-                <th scope="col">
-                  <span className="visually-hidden">並び替え</span>
-                </th>
-                <th scope="col">ページ名</th>
-                <th scope="col">URL</th>
-                <th scope="col">① 制作フェーズ</th>
-                <th scope="col">② 確認状況</th>
-                <th scope="col">素材</th>
-                <th scope="col">
-                  <span className="visually-hidden">操作</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleRows.map((r) => (
-                <SitemapRow
-                  key={r.id}
-                  row={r}
-                  href={joinUrl(project.staging_url, r.url_path)}
-                  phases={phases}
-                  phaseTone={phaseTone(r.phase_id)}
-                  points={statusesByPage.get(r.id) ?? []}
-                  busy={savingId === r.id}
-                  dragDisabled={!canReorder}
-                  dropDisabled={dragSubtree.has(r.id)}
-                  dropZone={drop?.targetId === r.id && drop.plan ? drop.zone : null}
-                  isSource={dragId === r.id}
-                  onChangePhase={(phaseId) => changePhase(r, phaseId)}
-                  onChangeStatus={(pointId, status) => changeStatus(r, pointId, status)}
-                  onEdit={() => setPageDialog({ open: true, page: r })}
-                />
-              ))}
-            </tbody>
-          </table>
-          {rows.length === 0 && (
-            <p className="muted table-empty">まだページがありません。「＋ ページを追加」から始めましょう。</p>
-          )}
-          {rows.length > 0 && visibleRows.length === 0 && (
-            <p className="muted table-empty">条件に合うページはありません。</p>
-          )}
+          <select
+            className="filter-select"
+            value={phaseFilter}
+            onChange={(e) => setPhaseFilter(e.target.value)}
+            aria-label="制作フェーズで絞り込む"
+          >
+            <option value="">制作フェーズ: すべて</option>
+            {phases.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <DragOverlay dropAnimation={null}>
-          {(source) => (
-            <div className="drag-overlay">
-              {rows.find((r) => r.id === source.id)?.name}
-              {drop?.plan && <span className="drag-overlay-hint">{drop.plan.label}</span>}
-            </div>
-          )}
-        </DragOverlay>
-      </DragDropProvider>
 
-      <p className="muted small sitemap-note">
-        ①制作フェーズ（自分の作業）と②確認状況（クライアントの返事）は別々に動かせます。
-        確認待ち・修正対応中のまま先のフェーズへ進んだページには「▲先行着手」が付きます。
-      </p>
+        {actionError && (
+          <p role="alert" className="error">
+            {actionError}
+          </p>
+        )}
+
+        <p className="visually-hidden" aria-live="polite">
+          {dragId ? (drop?.plan?.label ?? 'ここには置けません') : ''}
+        </p>
+        {(filter !== 'all' || phaseFilter) && (
+          <p className="muted small">
+            絞り込み中は並び替えできません。「すべて」に戻すと、左端のつまみでドラッグできます。
+          </p>
+        )}
+
+        <DragDropProvider
+          onDragStart={(event) => {
+            setDragId(String(event.operation.source?.id))
+            setDrop(null)
+          }}
+          onDragOver={(event) => {
+            updateDrop(event.operation.target, event.operation.position.current.y)
+          }}
+          onDragMove={(event) => {
+            // move イベントの時点では position はまだ前の値なので、これから動く先で計算する
+            const { position, target } = event.operation
+            const y = event.to?.y ?? position.current.y + (event.by?.y ?? 0)
+            updateDrop(target, y)
+          }}
+          onDragEnd={(event) => {
+            const dragged = event.operation.source?.id
+            const plan = dropRef.current?.plan
+            setDragId(null)
+            setDrop(null)
+            if (event.canceled || !dragged || !plan) return
+            void move(String(dragged), plan)
+          }}
+        >
+          <div className="table-wrap">
+            <table className="sitemap">
+              <thead>
+                <tr>
+                  <th scope="col">
+                    <span className="visually-hidden">並び替え</span>
+                  </th>
+                  <th scope="col">ページ名</th>
+                  <th scope="col">URL</th>
+                  <th scope="col">① 制作フェーズ</th>
+                  <th scope="col">② 確認状況</th>
+                  <th scope="col">素材</th>
+                  <th scope="col">指摘</th>
+                  <th scope="col">
+                    <span className="visually-hidden">操作</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleRows.map((r) => (
+                  <SitemapRow
+                    key={r.id}
+                    row={r}
+                    href={joinUrl(project.staging_url, r.url_path)}
+                    phases={phases}
+                    phaseTone={phaseTone(r.phase_id)}
+                    points={statusesByPage.get(r.id) ?? []}
+                    busy={savingId === r.id}
+                    dragDisabled={!canReorder}
+                    dropDisabled={dragSubtree.has(r.id)}
+                    dropZone={drop?.targetId === r.id && drop.plan ? drop.zone : null}
+                    isSource={dragId === r.id}
+                    onChangePhase={(phaseId) => changePhase(r, phaseId)}
+                    onChangeStatus={(pointId, status) => changeStatus(r, pointId, status)}
+                    onEdit={() => setPageDialog({ open: true, page: r })}
+                  />
+                ))}
+              </tbody>
+            </table>
+            {rows.length === 0 && (
+              <p className="muted table-empty">まだページがありません。「＋ ページを追加」から始めましょう。</p>
+            )}
+            {rows.length > 0 && visibleRows.length === 0 && (
+              <p className="muted table-empty">条件に合うページはありません。</p>
+            )}
+          </div>
+          <DragOverlay dropAnimation={null}>
+            {(source) => (
+              <div className="drag-overlay">
+                {rows.find((r) => r.id === source.id)?.name}
+                {drop?.plan && <span className="drag-overlay-hint">{drop.plan.label}</span>}
+              </div>
+            )}
+          </DragOverlay>
+        </DragDropProvider>
+
+        <p className="muted small sitemap-note">
+          ①制作フェーズ（自分の作業）と②確認状況（クライアントの返事）は別々に動かせます。
+          確認待ち・修正対応中のまま先のフェーズへ進んだページには「▲先行着手」が付きます。
+        </p>
+        </>
+      )}
 
       <PageDialog
         open={pageDialog.open}
