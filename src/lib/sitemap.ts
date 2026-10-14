@@ -114,3 +114,80 @@ export function joinUrl(base: string | null, path: string | null): string | null
   if (!base || !path) return null
   return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`
 }
+
+/** ドロップ位置。before / after は対象ページの前後（同じ親）、inside は対象ページの子 */
+export type DropZone = 'before' | 'after' | 'inside'
+
+/** 並び替え・階層変更で保存する内容。updates は pages に書く行（ふつうは移動するページ1件だけ） */
+export type MovePlan = {
+  label: string
+  updates: { id: string; parent_id: string | null; position: number }[]
+}
+
+/**
+ * ドラッグしたページを、対象ページの前・後ろ・子へ動かしたときの保存内容を作る。
+ * 動かない（元と同じ並び）か、自分や子孫の中へ動かす（親子が輪になる）ときは null。
+ * rows は絞り込み前のツリー全体を渡す。
+ */
+export function planMove(
+  rows: TreeRow[],
+  dragId: string,
+  targetId: string,
+  zone: DropZone,
+): MovePlan | null {
+  const drag = rows.find((r) => r.id === dragId)
+  const target = rows.find((r) => r.id === targetId)
+  if (!drag || !target || collectDescendantIds(rows, dragId).has(targetId)) return null
+
+  // 親のIDとして表に出ているもの（buildTree で一番上に回したページは parent_id を null とみなす）
+  const ids = new Set(rows.map((r) => r.id))
+  const parentOf = (r: TreeRow) => (r.parent_id && ids.has(r.parent_id) ? r.parent_id : null)
+  // rows はツリー順なので、filter すると兄弟が並び順のまま取れる
+  const childrenOf = (parentId: string | null) =>
+    rows.filter((r) => parentOf(r) === parentId && r.id !== dragId)
+
+  let parentId: string | null
+  let index: number
+  let label: string
+  const targetChildren = childrenOf(target.id)
+  if (zone === 'inside') {
+    parentId = target.id
+    index = targetChildren.length
+    label = `「${target.name}」の子（最後）へ移動`
+  } else if (zone === 'after' && targetChildren.length > 0) {
+    // 子がいるページの下端は、見た目では子の一番上との境目なので「子の先頭」にする
+    parentId = target.id
+    index = 0
+    label = `「${target.name}」の子（先頭）へ移動`
+  } else {
+    parentId = parentOf(target)
+    const siblings = childrenOf(parentId)
+    index = siblings.findIndex((r) => r.id === target.id) + (zone === 'after' ? 1 : 0)
+    label = `「${target.name}」の${zone === 'after' ? '後ろ' : '前'}へ移動`
+  }
+
+  const order = childrenOf(parentId)
+  order.splice(index, 0, drag)
+  const before = rows.filter((r) => parentOf(r) === parentOf(drag)).map((r) => r.id)
+  if (parentId === parentOf(drag) && order.map((r) => r.id).join() === before.join()) return null
+
+  // position は前後の兄弟の中間値にする（1件の更新で済む）
+  const prev = order[index - 1]
+  const next = order[index + 1]
+  const position = prev && next
+    ? (prev.position + next.position) / 2
+    : prev
+      ? prev.position + 1
+      : next
+        ? next.position - 1
+        : 1
+  if (!prev || !next || (prev.position < position && position < next.position)) {
+    return { label, updates: [{ id: dragId, parent_id: parentId, position }] }
+  }
+
+  // 前後の position が同じで中間値が取れないときは、兄弟を 1, 2, 3… に振り直す
+  const updates = order
+    .map((r, i) => ({ id: r.id, parent_id: r.id === dragId ? parentId : r.parent_id, position: i + 1 }))
+    .filter((u) => u.id === dragId || rows.find((r) => r.id === u.id)?.position !== u.position)
+  return { label, updates }
+}
