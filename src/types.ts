@@ -90,3 +90,13 @@ export type Issue = {
   resolved_at: string | null
   created_at: string
 }
+
+export type ScheduleStage = 'wireframe' | 'design' | 'build' | 'final'
+
+/** page_schedules テーブルの1行（ページ × 期間の予定）。日付は 'YYYY-MM-DD' */
+export type PageSchedule = {
+  page_id: string
+  stage: ScheduleStage
+  start_date: string
+  due_date: string
+}
