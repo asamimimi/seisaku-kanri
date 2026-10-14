@@ -337,3 +337,33 @@ a { color: var(--blue); }
 .gantt-handle-start { left: 0; }
 .gantt-handle-end { right: 0; }
 .gantt-bar:hover .gantt-handle { background: rgb(0 0 0 / 0.15); }
+.badge-client { margin-right: 6px; background: var(--panel); border-color: var(--blue); color: var(--blue-ink); }
+
+/* 共有リンク */
+.title-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.share-url { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.share-url input { flex: 1 1 280px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--ground); font: inherit; font-size: 13px; }
+
+/* 共有画面（クライアント向け） */
+.share-sitemap { min-width: 760px; }
+.phase-chip { display: inline-block; padding: 2px 12px; border: 1px solid var(--line); white-space: nowrap; }
+.phase-chip.tone-0 { background: var(--panel); }
+.phase-chip.tone-1 { background: var(--head); }
+.phase-chip.tone-2 { background: var(--line); }
+.phase-chip.tone-3 { background: var(--muted); border-color: var(--muted); color: #fff; }
+.phase-chip.tone-4 { background: var(--ink); border-color: var(--ink); color: #fff; }
+.share-points { display: flex; flex-wrap: wrap; gap: 4px 6px; margin: 0; padding: 0; list-style: none; }
+.share-point { padding: 0 8px; border: 1px solid var(--line); font-size: 12px; white-space: nowrap; }
+.share-point.status-waiting { background: var(--blue-bg); border-color: var(--blue); color: var(--blue-ink); font-weight: 700; }
+.share-point.status-revising { border-style: dashed; border-color: var(--ink); }
+.share-point.status-ok { border-color: var(--ink); }
+.share-point.status-not_requested, .share-point.status-not_required { color: var(--muted); border-style: dashed; }
+.share-comment { margin-top: 32px; }
+.share-comment .field { margin-bottom: 0; }
+.share-comment-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.share-sent { margin: 0; padding: 8px 12px; background: var(--blue-bg); border: 1px solid var(--blue); color: var(--blue-ink); }
+.share-author { max-width: 360px; }
+.share-items { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.share-item > fieldset { display: grid; gap: 12px; margin: 0; padding: 12px 16px 16px; border: 1px solid var(--line); }
+.share-item-title { display: flex; align-items: center; gap: 12px; padding: 0 4px; font-weight: 700; }
+.share-item-remove { min-height: 44px; font-weight: 400; font-size: 13px; color: var(--danger); }

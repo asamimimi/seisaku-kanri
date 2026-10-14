@@ -7,6 +7,7 @@ import { buildTree, collectDescendantIds, joinUrl, planMove } from '../lib/sitem
 import type { DropZone, MovePlan, TreeRow } from '../lib/sitemap'
 import { IssueList } from '../components/IssueList'
 import { ScheduleChart } from '../components/ScheduleChart'
+import { ShareDialog } from '../components/ShareDialog'
 import { collectDeadlines, today } from '../lib/schedule'
 import { PageDialog } from '../components/PageDialog'
 import { SitemapRow } from '../components/SitemapRow'
@@ -62,6 +63,7 @@ export default function ProjectPage() {
     page: null,
   })
   const [stagingOpen, setStagingOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
 
   // ドラッグ中のページと、いま落とすとどうなるか
   const [dragId, setDragId] = useState<string | null>(null)
@@ -90,7 +92,7 @@ export default function ProjectPage() {
       supabase.from('page_confirmation_status').select('*').eq('project_id', projectId),
       supabase
         .from('issues')
-        .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at')
+        .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at, author_name')
         .eq('project_id', projectId),
       supabase
         .from('page_schedules')
@@ -267,9 +269,14 @@ export default function ProjectPage() {
             </span>
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setPageDialog({ open: true, page: null })}>
-          ＋ ページを追加
-        </button>
+        <div className="title-actions">
+          <button className="btn btn-outline" onClick={() => setShareOpen(true)}>
+            共有リンク
+          </button>
+          <button className="btn btn-primary" onClick={() => setPageDialog({ open: true, page: null })}>
+            ＋ ページを追加
+          </button>
+        </div>
       </div>
 
       <nav className="tabs" aria-label="案件の表示">
@@ -470,6 +477,7 @@ export default function ProjectPage() {
           setReloadKey((k) => k + 1)
         }}
       />
+      <ShareDialog open={shareOpen} projectId={projectId} onClose={() => setShareOpen(false)} />
       <StagingUrlDialog
         open={stagingOpen}
         projectId={projectId}

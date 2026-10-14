@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import Projects from './pages/Projects'
 import ProjectPage from './pages/ProjectPage'
 import PageDetail from './pages/PageDetail'
+import SharePage from './pages/SharePage'
 
 /** ログインしていない人を /login へ送る。ログイン済みなら共通ヘッダー付きで中身を出す。 */
 function RequireAuth() {
@@ -25,6 +26,8 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          {/* クライアント向けの共有画面。ログインなしで開ける */}
+          <Route path="/share/:token" element={<SharePage />} />
           <Route element={<RequireAuth />}>
             <Route path="/" element={<Projects />} />
             <Route path="/projects/:projectId" element={<ProjectPage />} />

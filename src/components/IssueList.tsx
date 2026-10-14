@@ -112,6 +112,7 @@ export function IssueList({ projectId, issues, pageId, pages, onSaved }: Props) 
                   <span className="issue-body">{i.body}</span>
                 </div>
                 <p className="issue-meta">
+                  {i.author_name && <span className="badge badge-client">共有リンクから: {i.author_name}</span>}
                   {pageId === undefined && (
                     <>
                       {i.page_id ? (
