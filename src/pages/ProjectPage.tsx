@@ -6,11 +6,14 @@ import { formatDue } from '../lib/date'
 import { buildTree, collectDescendantIds, joinUrl, planMove } from '../lib/sitemap'
 import type { DropZone, MovePlan, TreeRow } from '../lib/sitemap'
 import { IssueList } from '../components/IssueList'
+import { ScheduleChart } from '../components/ScheduleChart'
+import { collectDeadlines, today } from '../lib/schedule'
 import { PageDialog } from '../components/PageDialog'
 import { SitemapRow } from '../components/SitemapRow'
 import { StagingUrlDialog } from '../components/StagingUrlDialog'
 import type {
   Issue,
+  PageSchedule,
   ConfirmationStatus,
   PageConfirmationStatus,
   PageOverview,
@@ -24,6 +27,7 @@ type Data = {
   phases: Phase[]
   statuses: PageConfirmationStatus[]
   issues: Issue[]
+  schedules: PageSchedule[]
 }
 
 type DropState = { targetId: string; zone: DropZone; plan: MovePlan | null }
@@ -42,7 +46,8 @@ export default function ProjectPage() {
   const { projectId = '' } = useParams()
   // タブ（サイトマップ / 指摘・質問）は URL の ?tab= で持つ（再読み込みやリンクでも同じタブが開く）
   const [searchParams, setSearchParams] = useSearchParams()
-  const view = searchParams.get('tab') === 'issues' ? 'issues' : 'sitemap'
+  const tabParam = searchParams.get('tab')
+  const view = tabParam === 'issues' || tabParam === 'schedule' ? tabParam : 'sitemap'
   const [data, setData] = useState<Data | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -87,9 +92,13 @@ export default function ProjectPage() {
         .from('issues')
         .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at')
         .eq('project_id', projectId),
-    ]).then(([project, pages, phases, statuses, issues]) => {
+      supabase
+        .from('page_schedules')
+        .select('page_id, stage, start_date, due_date')
+        .eq('project_id', projectId),
+    ]).then(([project, pages, phases, statuses, issues, schedules]) => {
       if (cancelled) return
-      const failed = project.error ?? pages.error ?? phases.error ?? statuses.error ?? issues.error
+      const failed = project.error ?? pages.error ?? phases.error ?? statuses.error ?? issues.error ?? schedules.error
       if (failed) {
         setError(failed.message)
         return
@@ -105,6 +114,7 @@ export default function ProjectPage() {
         phases: phases.data as Phase[],
         statuses: statuses.data as PageConfirmationStatus[],
         issues: issues.data as Issue[],
+        schedules: schedules.data as PageSchedule[],
       })
     })
     return () => {
@@ -225,6 +235,7 @@ export default function ProjectPage() {
 
   const { project, phases } = data
   const openIssues = data.issues.filter((i) => !i.resolved_at).length
+  const overdueCount = collectDeadlines(rows, data.schedules, today()).overdue.length
   const phaseTone = (phaseId: string) =>
     Math.min(Math.max(phases.findIndex((p) => p.id === phaseId), 0), 4)
 
@@ -285,9 +296,33 @@ export default function ProjectPage() {
           指摘・質問
           {openIssues > 0 && <span className="tab-count">{openIssues}</span>}
         </Link>
+        <Link
+          to={`/projects/${projectId}?tab=schedule`}
+          className="tab"
+          aria-current={view === 'schedule' ? 'page' : undefined}
+          onClick={(e) => {
+            e.preventDefault()
+            setSearchParams({ tab: 'schedule' })
+          }}
+        >
+          スケジュール
+          {overdueCount > 0 && (
+            <span className="tab-count tab-count-danger" aria-label={`期限切れ ${overdueCount}件`}>
+              {overdueCount}
+            </span>
+          )}
+        </Link>
       </nav>
 
-      {view === 'issues' ? (
+      {view === 'schedule' ? (
+        <ScheduleChart
+          projectId={projectId}
+          rows={rows}
+          schedules={data.schedules}
+          projectDue={project.due_date}
+          onSaved={() => setReloadKey((k) => k + 1)}
+        />
+      ) : view === 'issues' ? (
         <IssueList
           projectId={projectId}
           issues={data.issues}
