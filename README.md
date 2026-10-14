@@ -24,6 +24,9 @@ Supabase の **SQL Editor** を開き、`supabase/migrations/20261013000000_v01_
 4. Supabase Dashboard の **Authentication → URL Configuration** で、
    **Site URL** を `http://localhost:5173` にし、**Redirect URLs** にも `http://localhost:5173` を追加する。
    （公式ドキュメントに具体的な値の記載がないため、ログイン後に戻れないときはまずここを確認する）
+   - 本番公開後は **Site URL** を本番のURL（`https://seisaku-kanri-5f0dd.web.app/`）に変える。
+     戻り先が Redirect URLs と一致しないと Site URL に戻されるため、localhost のままだと本番でログインした後に localhost へ飛ばされる。
+   - ローカルでもログインできるよう、**Redirect URLs** には `http://localhost:5173/**` と本番の `https://seisaku-kanri-5f0dd.web.app/**` の両方を入れておく。
 
 ### 4. 環境変数を設定する
 ```
