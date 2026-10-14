@@ -62,7 +62,7 @@ export default function PageDetail() {
         .order('position'),
       supabase
         .from('issues')
-        .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at')
+        .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at, author_name')
         .eq('page_id', pageId),
     ]).then(([project, pages, phases, points, gates, spec, materials, issues]) => {
       if (cancelled) return

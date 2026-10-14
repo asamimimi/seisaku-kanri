@@ -89,6 +89,8 @@ export type Issue = {
   figma_comment_url: string | null
   resolved_at: string | null
   created_at: string
+  /** 共有リンクからクライアントが送ったときの名前。自分で登録したものは null */
+  author_name: string | null
 }
 
 export type ScheduleStage = 'wireframe' | 'design' | 'build' | 'final'
@@ -99,4 +101,20 @@ export type PageSchedule = {
   stage: ScheduleStage
   start_date: string
   due_date: string
+}
+
+/** 共有画面（get_shared_project 関数）が返す中身。見せてよい項目だけ */
+export type SharedProject = {
+  project: { name: string; client_name: string | null; due_date: string | null; staging_url: string | null }
+  phases: Phase[]
+  pages: { id: string; parent_id: string | null; name: string; url_path: string | null; position: number; phase_id: string }[]
+  confirmations: {
+    page_id: string
+    point_name: string
+    point_position: number
+    status: ConfirmationStatus
+    requested_at: string | null
+    resolved_at: string | null
+  }[]
+  schedules: PageSchedule[]
 }
