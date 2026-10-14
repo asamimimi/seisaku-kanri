@@ -113,6 +113,18 @@ export function SitemapRow({
           <span className="muted">—</span>
         )}
       </td>
+      <td className="sitemap-issues">
+        {row.open_issues_count > 0 ? (
+          <Link
+            to={`/projects/${row.project_id}/pages/${row.id}`}
+            aria-label={`${row.name}の未対応の指摘・質問 ${row.open_issues_count}件`}
+          >
+            {row.open_issues_count}
+          </Link>
+        ) : (
+          <span className="muted">—</span>
+        )}
+      </td>
       <td>
         <button className="btn btn-outline" onClick={onEdit} aria-label={`${row.name}を編集`}>
           編集

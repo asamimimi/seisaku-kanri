@@ -49,6 +49,7 @@ export type PageOverview = {
   ahead_count: number
   materials_count: number
   materials_temporary_count: number
+  open_issues_count: number
 }
 
 export type ConfirmationStatus = 'not_requested' | 'waiting' | 'revising' | 'ok' | 'not_required'
@@ -75,4 +76,17 @@ export type Material = {
   source_url: string | null
   status: MaterialStatus
   position: number
+}
+
+export type IssueKind = 'fix' | 'question'
+
+/** issues テーブルの1行（指摘・質問）。page_id が null なら案件全体 */
+export type Issue = {
+  id: string
+  page_id: string | null
+  kind: IssueKind
+  body: string
+  figma_comment_url: string | null
+  resolved_at: string | null
+  created_at: string
 }

@@ -3,10 +3,12 @@ import { Link, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { daysSince, formatMonthDay } from '../lib/date'
 import { STATUS_LABELS, joinUrl } from '../lib/sitemap'
+import { IssueList } from '../components/IssueList'
 import { MaterialList } from '../components/MaterialList'
 import { SpecMemo } from '../components/SpecMemo'
 import type {
   ConfirmationStatus,
+  Issue,
   Material,
   PageConfirmationStatus,
   PageOverview,
@@ -22,6 +24,7 @@ type Data = {
   gates: Map<string, string> // 確認ポイントID → ゲートのフェーズID
   spec: { spec_memo: string; figma_url: string | null } | null // ビューに無い列（仕様メモ・Figmaリンク）
   materials: Material[]
+  issues: Issue[]
 }
 
 const STATUSES = Object.keys(STATUS_LABELS) as ConfirmationStatus[]
@@ -57,7 +60,11 @@ export default function PageDetail() {
         .select('id, page_id, name, source_url, status, position')
         .eq('page_id', pageId)
         .order('position'),
-    ]).then(([project, pages, phases, points, gates, spec, materials]) => {
+      supabase
+        .from('issues')
+        .select('id, page_id, kind, body, figma_comment_url, resolved_at, created_at')
+        .eq('page_id', pageId),
+    ]).then(([project, pages, phases, points, gates, spec, materials, issues]) => {
       if (cancelled) return
       const failed =
         project.error ??
@@ -66,7 +73,8 @@ export default function PageDetail() {
         points.error ??
         gates.error ??
         spec.error ??
-        materials.error
+        materials.error ??
+        issues.error
       if (failed) {
         setError(failed.message)
         return
@@ -88,6 +96,7 @@ export default function PageDetail() {
         ),
         spec: spec.data,
         materials: materials.data as Material[],
+        issues: issues.data as Issue[],
       })
     })
     return () => {
@@ -144,7 +153,7 @@ export default function PageDetail() {
   }
   if (!data || !page) return <p className="status">読み込み中…</p>
 
-  const { project, pages, phases, points, gates, spec, materials } = data
+  const { project, pages, phases, points, gates, spec, materials, issues } = data
   const reload = () => setReloadKey((k) => k + 1)
   const phaseIndex = phases.findIndex((p) => p.id === page.phase_id)
   const nextPhase = phases[phaseIndex + 1]
@@ -312,6 +321,7 @@ export default function PageDetail() {
             materials={materials}
             onSaved={reload}
           />
+          <IssueList projectId={projectId} pageId={page.id} issues={issues} onSaved={reload} />
         </div>
       </div>
     </main>
